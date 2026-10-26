@@ -4,7 +4,7 @@ from UCS import UniformCostSearch
 from AStar import AStarSearch
 from beamSearch import BeamSearch
 
-# Define a new graph with Metro Manila cities and connections
+# Define graph with Metro Manila cities and road connections
 metro_manila_graph = {
     "Makati": {"Taguig": 5, "Pasay": 3, "Mandaluyong": 6},
     "Taguig": {"Makati": 5, "Pasig": 7},
@@ -32,22 +32,30 @@ heuristic_values = {
 
 # Function to display the cities and their heuristic values
 def display_cities_and_heuristics():
-    print("Cities and their heuristic values:")
+    print("Cities and their heuristic values (Goal: Paranaque):")
     for city, heuristic in heuristic_values.items():
-        print(f"{city}: {heuristic}")
+        print(f"  {city}: {heuristic}")
 
 # Function to display the graph in a simple format
 def display_graph(graph):
     print("\nGraph connections:")
     for city, connections in graph.items():
         connections_str = ", ".join(f"{neighbor}({cost})" for neighbor, cost in connections.items())
-        print(f"{city} -> {connections_str}")
+        print(f"  {city} -> {connections_str}")
+
+# Helper function for case-insensitive city matching
+def resolve_city_name(name, graph):
+    clean = name.strip()
+    for city in graph:
+        if city.lower() == clean.lower():
+            return city
+    return None
 
 # Function to get user input for start and end cities
 def get_user_input():
-    start_city = input("\n\nEnter the start city: ").strip()
-    end_city = input("Enter the end city: ").strip()
-    return start_city, end_city
+    start_input = input("\nEnter the start city: ").strip()
+    end_input = input("Enter the end city: ").strip()
+    return start_input, end_input
 
 # Function to run the search and display results
 def run_search(search_algorithm, start_city, end_city):
@@ -61,13 +69,14 @@ def run_search(search_algorithm, start_city, end_city):
     tracemalloc.stop()
     
     elapsed_time = (end_time - start_time) * 1e6  # Convert to microseconds
-    path_str = " -> ".join(path)
-    visited_str = " -> ".join(visited_order)
+    path_str = " -> ".join(path) if path else "No path found"
+    visited_str = " -> ".join(visited_order) if visited_order else "None"
+    cost_display = total_cost if total_cost != float('inf') else "Unreachable"
     
     result_text = (
         f"Final Path: {path_str}\n"
         f"Path Traversed: {visited_str}\n"
-        f"Total Cost: {total_cost}\n"
+        f"Total Cost: {cost_display}\n"
         f"Time: {elapsed_time:.4f} microseconds\n"
         f"Nodes Expanded: {nodes_expanded}\n"
         f"Max Frontier Size: {max_frontier_size}\n"
@@ -81,21 +90,26 @@ def main():
     display_cities_and_heuristics()
     display_graph(metro_manila_graph)
     
-    start_city, end_city = get_user_input()
+    start_input, end_input = get_user_input()
     
-    if start_city not in metro_manila_graph or end_city not in metro_manila_graph:
-        print("Invalid city names. Please enter valid city names from the graph.")
+    start_city = resolve_city_name(start_input, metro_manila_graph)
+    end_city = resolve_city_name(end_input, metro_manila_graph)
+    
+    if not start_city or not end_city:
+        print("\nInvalid city names. Please enter valid city names from the graph.")
         return
     
-    
+    print(f"\n--- Routing from {start_city} to {end_city} ---")
 
-    print("\nUniform Cost Search:")
+    print("\n[1] Uniform Cost Search (UCS):")
     ucs = UniformCostSearch(metro_manila_graph)
     run_search(ucs, start_city, end_city)
-    print("\nA* Search:")
+
+    print("\n[2] A* Search:")
     a_star = AStarSearch(metro_manila_graph, heuristic_values)
     run_search(a_star, start_city, end_city)
-    print("\nBeam Search:")
+
+    print("\n[3] Beam Search (beam_width=2):")
     beam_search = BeamSearch(metro_manila_graph, heuristic_values, beam_width=2)
     run_search(beam_search, start_city, end_city)
 

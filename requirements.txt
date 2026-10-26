@@ -1,0 +1,8 @@
+# Metro Manila Pathfinding & Algorithm Analysis
+# Core algorithms use Python Standard Library:
+# - heapq
+# - time
+# - tracemalloc
+
+# Optional developer and testing dependencies:
+pytest>=7.0.0

@@ -15,17 +15,24 @@ class AStarSearch:
         function_values = {start: self.heuristic_values.get(start, 0)}
         came_from = {start: None}
         visited_order = []
+        explored = set()
 
         while frontier:
             max_frontier_size = max(max_frontier_size, len(frontier))
             current_cost, current_node = heapq.heappop(frontier)
+
+            # Avoid re-expanding already explored nodes from stale heap entries
+            if current_node in explored:
+                continue
+            explored.add(current_node)
             visited_order.append(current_node)
 
             if current_node == goal:
                 path = []
-                while current_node is not None:
-                    path.append(current_node)
-                    current_node = came_from[current_node]
+                temp = current_node
+                while temp is not None:
+                    path.append(temp)
+                    temp = came_from[temp]
                 return visited_order, cost_so_far[goal], path[::-1], len(visited_order), max_frontier_size, visit_count
 
             for neighbor, cost in self.graph[current_node].items():
